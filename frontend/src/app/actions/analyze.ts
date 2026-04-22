@@ -1,45 +1,41 @@
-// frontend/src/app/actions/analyze.ts
 "use server";
 
-import { UploadSchema, AIF360ResponseSchema } from "@/lib/schemas";
+import { UploadSchema } from "@/lib/schemas";
 
 export async function analyzeDataset(formData: FormData) {
-  const file = formData.get("file");
-
-  const parsed = UploadSchema.safeParse({ file });
-
-  if (!parsed.success) {
-    return {
-      success: false as const,
-      error: parsed.error.errors[0]?.message || "Invalid file.",
-    };
-  }
-
-  const backendFormData = new FormData();
-  backendFormData.append("file", parsed.data.file);
-
   try {
+    // 1. Edge Validation
+    const file = formData.get("file");
+    const validated = UploadSchema.safeParse({ file });
+
+    if (!validated.success) {
+      return { data: null, error: "Invalid file format. Please upload a CSV." };
+    }
+
+    // 2. FastAPI Handshake
+    // Note: Use 'http://127.0.0.1:8000' for local dev
     const response = await fetch("http://127.0.0.1:8000/api/analyze", {
       method: "POST",
-      body: backendFormData,
+      body: formData,
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with status: ${response.status}`);
+      const errorData = await response.json();
+      return { data: null, error: errorData.detail || "FastAPI Engine Error" };
     }
 
-    const json = await response.json();
-    const metrics = AIF360ResponseSchema.parse(json);
+    const metrics = await response.json();
 
-    return {
-      success: true as const,
-      data: metrics,
+    return { 
+      data: metrics.metrics, 
+      error: null 
     };
-  } catch (error) {
-    console.error("Analysis error:", error);
-    return {
-      success: false as const,
-      error: error instanceof Error ? error.message : "Network or server failure.",
+
+  } catch (err) {
+    console.error("Analysis Pipeline Crash:", err);
+    return { 
+      data: null, 
+      error: "Network failure: Ensure FastAPI server is running on port 8000." 
     };
   }
 }
