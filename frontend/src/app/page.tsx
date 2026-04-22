@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Navbar } from "@/components/ui/Navbar";
 import { UploadDropzone } from "@/components/ui/UploadDropzone";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { MetricBadge } from "@/components/ui/MetricBadge";
@@ -12,8 +13,9 @@ export default function DashboardPage() {
   const { metrics, aiExplanation, isAnalyzing } = useBiasReport();
 
   return (
-    <main className="min-h-screen p-8 lg:p-12">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen p-8 lg:p-12 relative">
+      <Navbar />
+      <div className="max-w-7xl mx-auto space-y-8 pt-24">
         <header>
           <h1 className="text-3xl font-medium text-primary mb-2">FairLens Dashboard</h1>
           <p className="text-secondary">Enterprise Data Bias Analysis via AIF360 & GLM 5.1</p>
