@@ -39,3 +39,17 @@ export const staggerChildren: Variants = {
     },
   },
 };
+
+export const pulseSkeleton: Variants = {
+  initial: {
+    opacity: 0.3,
+  },
+  animate: {
+    opacity: [0.3, 0.6, 0.3],
+    transition: {
+      repeat: Infinity,
+      duration: 2,
+      ease: "easeInOut",
+    },
+  },
+};
