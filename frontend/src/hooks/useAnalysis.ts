@@ -1,64 +1,66 @@
-// frontend/src/hooks/useAnalysis.ts
 import { useBiasReport } from "@/store/useBiasReport";
 import { analyzeDataset } from "@/app/actions/analyze";
+import { saveReport } from "@/app/actions/reports";
 
-export const useAnalysis = () => {
+export function useAnalysis() {
   const {
     reset,
-    setFile,
     setIsAnalyzing,
     setMetrics,
     appendAiExplanation,
   } = useBiasReport();
 
-  const processDataset = async (file: File) => {
+  const runAnalysis = async (formData: FormData, fileName: string) => {
+    reset();
+    setIsAnalyzing(true);
+
     try {
-      reset();
-      setFile(file);
-      setIsAnalyzing(true);
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const result = await analyzeDataset(formData);
-
-      if (!result.success) {
-        alert(result.error);
+      // Step A: Analysis
+      const analysisResult = await analyzeDataset(formData);
+      if (analysisResult.error || !analysisResult.data) {
+        console.error("Analysis Error:", analysisResult.error);
         setIsAnalyzing(false);
         return;
       }
 
-      setMetrics(result.data);
+      // Step B: Update Zustand
+      const metrics = analysisResult.data;
+      setMetrics(metrics);
 
-      const response = await fetch("/api/explain", {
+      // Step C: Persistence
+      const saveResult = await saveReport(fileName, metrics);
+      if (saveResult.error) {
+        console.warn("Failed to save report to database:", saveResult.error);
+        // DO NOT stop the process
+      }
+
+      // Step D: AI Stream
+      const aiResponse = await fetch("/api/explain", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ metrics: result.data }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ metrics }),
       });
 
-      if (!response.body) {
-        throw new Error("No response body from explanation API.");
+      if (!aiResponse.ok) {
+        console.warn("Failed to start AI explanation stream");
+      } else if (aiResponse.body) {
+        const reader = aiResponse.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          appendAiExplanation(chunk);
+        }
       }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        appendAiExplanation(chunk);
-      }
-    } catch (error) {
-      console.error("Analysis process failed:", error);
-      alert("An error occurred during dataset analysis.");
+    } catch (err) {
+      console.error("Unexpected error during analysis waterfall:", err);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  return { processDataset };
-};
+  return { runAnalysis };
+}
