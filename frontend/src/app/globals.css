@@ -1,0 +1,87 @@
+/* frontend/src/app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  --color-background: #050505;
+  --color-foreground: #fafafa;
+  --color-glass-bg: rgba(10, 10, 10, 0.4);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-highlight: rgba(255, 255, 255, 0.04);
+  --color-accent: #a0a0a0;
+  --color-accent-hover: #c0c0c0;
+  --color-surface: #0a0a0a;
+  --color-surface-raised: #111111;
+  --color-danger: #ff4444;
+  --color-warning: #ffaa00;
+  --color-success: #44ff88;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@layer components {
+  .glass-panel {
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 12px;
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    box-shadow:
+      0 0 0 1px var(--color-glass-highlight) inset,
+      0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .text-primary {
+    color: var(--color-foreground);
+    opacity: 1;
+  }
+
+  .text-secondary {
+    color: #a3a3a3; /* neutral-400 */
+    opacity: 0.9;
+  }
+}
